@@ -5,6 +5,7 @@ Native macOS app (Apple Silicon first) that separates a song into stems, transcr
 ## Read first
 
 - `docs/Stems_Studio_Claude_Code_Specification.txt` is the single running spec. New features are added to this file, not to separate spec files.
+- `docs/Pre_Coding_Plan.md` is the pre-coding plan (architecture, dependencies and licences, model matrix, milestones, tests). Its "to confirm" and "to measure" items are still open.
 - `docs/renderings/` holds the user-approved screens: `StemsStudio-analyze.png`, `StemsStudio-recreate.png`, `StemsStudio-mix.png`.
 
 ## Rules
