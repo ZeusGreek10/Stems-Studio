@@ -1,0 +1,365 @@
+STEMS STUDIO — PRODUCT, DESIGN, AND IMPLEMENTATION SPECIFICATION
+Version: 1.3 | Date: 2026-11-17
+Purpose: Handoff specification for Claude Code to build a native macOS application.
+Status: Consolidates the user's approved decisions. Distinguishes approved requirements from proposed engineering choices and unverified technical assumptions.
+Changes in 1.3: Swift + Python split confirmed by the user (section 5); approved renderings added (section 12).
+Build status: NOT STARTED. Do not begin building until the user says to.
+
+============================================================
+1. PRODUCT VISION
+============================================================
+Name: Stems Studio
+Tagline: Separate. Recreate. Remix.
+Platform: Native macOS desktop app, Apple Silicon first (initial development target: Mac Studio M2 Max).
+Goal: Import a completed song, use AI to separate its instruments into stems, analyze those stems and generate editable MIDI performances, use MIDI to drive realistic sample-based virtual instruments, render new audio waveforms, then mix and export the result.
+Primary use case: Worship-song backing-track reconstruction and remixing. The product should also work with other genres.
+Core quality objective: Preserve the original arrangement, timing, dynamics, fills, and phrasing as much as practical. Do not imply that all parts can be reconstructed perfectly or automatically.
+Important distinction: Stem separation creates audio; transcription creates MIDI; rendering turns MIDI plus virtual instruments into new audio.
+
+============================================================
+2. APPROVED WORKFLOW AND NAVIGATION
+============================================================
+The three PRIMARY TOP TABS must appear in this order:
+  1. Analyze
+  2. Recreate
+  3. Mix
+An Export action is at the TOP RIGHT. Export should lead to the final export workflow, with primary mixdown controls also in Mix.
+Do not duplicate Analyze, Recreate, Mix, or Export in the left sidebar.
+
+LEFT SIDEBAR (collapsible):
+  Project
+    - Overview
+    - Project Files
+  Library
+    - Instruments
+    - Presets
+    - User Sounds
+    - Samples
+The sidebar is for project content and library navigation, NOT duplicate workflow navigation.
+
+SHARED LAYOUT, ALL TABS:
+  - Professional, simplified dark macOS interface.
+  - Charcoal/near-black surfaces, purple active accents, rounded panels, crisp readable typography.
+  - Color-coded stems and restrained visual clutter.
+  - Top: song title, cover art/placeholder, original recording information, tempo, key, time signature, and relevant AI analysis status.
+  - Directly BELOW song/AI analysis: transport bar containing play, stop, record, time position, original-song overview waveform, and zoom controls.
+  - Transport remains in the same position across tabs and should remain accessible while editing.
+  - Center: multitrack timeline with shared ruler, playhead, sections, and synchronized scrolling.
+  - Contextual right inspector where appropriate.
+  - Only the Mix tab has a mixer; it must be collapsible/resizable (Expanded, Compact, Hidden). No mixer in Analyze or Recreate.
+  - Project navigation sidebar can collapse to maximize timeline width.
+
+APPROVED RECREATE DESIGN:
+  Each instrument stem is an expandable group with TWO ALIGNED LANES:
+    TOP: MIDI note blocks (editable MIDI events / piano-roll preview).
+    BOTTOM: Recreated audio waveform rendered from the chosen virtual instrument.
+  This pairing is a hard requirement. MIDI is generated in Analyze but displayed and edited in Recreate.
+  Each group supports collapse/expand, mute/solo, selection, and a common timeline/playhead.
+  Original stem must remain available for A/B comparison and blending with recreated audio.
+
+============================================================
+3. TAB-SPECIFIC FUNCTIONAL REQUIREMENTS
+============================================================
+A. ANALYZE — SEPARATE AND TRANSCRIBE; NO MIXER
+  - Import WAV, AIFF, MP3, M4A (consider FLAC if supported).
+  - Preserve original audio; show original song overview waveform.
+  - AI stem separation: vocals, drums, bass, guitar, piano/keys, other/pads.
+  - Display six SEPARATED AUDIO WAVEFORMS, not reconstructed MIDI/audio pairs.
+  - Detect tempo, beat/downbeat grid, key, time signature, chords, and song sections (intro, verse, chorus, bridge, outro); allow manual correction.
+  - Generate MIDI from individual stems, per stem and optionally batch.
+  - Show transcription status and confidence, with clearly marked uncertain notes.
+  - Drum transcription: kick, snare, hi-hat initially; expand to toms, cymbals and percussion.
+  - Bass transcription: note pitch, onset, offset, velocity, pitch bends where possible.
+  - Guitar and piano polyphonic transcription are advanced/experimental; don't claim exact results.
+  - Provide note-review/correction tooling for generated MIDI. Analysis may use a detailed MIDI editor, but the default Analyze timeline shows original separated audio stems.
+  - No EQ, compression, channel-strip mixer, or mixdown controls here.
+
+B. RECREATE — REPLACE INSTRUMENTS AND RENDER NEW AUDIO; NO MIXER
+  - For EACH stem, display MIDI note blocks ABOVE its recreated audio waveform.
+  - Select a stem; choose a virtual instrument/sample library and preset in the right inspector.
+  - Prioritize realistic, prerecorded/multisampled acoustic instruments, not generic synthetic approximations.
+  - Initial instruments: acoustic drum kit and electric bass. Expand to piano, acoustic/electric guitar, pads, strings, etc.
+  - Preview instrument, adjust MIDI velocity, timing/humanization, articulations and instrument-specific parameters.
+  - Edit MIDI notes via piano roll; edits update the reconstruction when re-rendered.
+  - Render/re-render audio from MIDI and chosen virtual instrument; update the waveform lane.
+  - Allow Original / Recreated / Blend audition per instrument, with original-stem availability.
+  - Support track group collapse/expand and synchronized playback.
+  - Avoid full mixer, EQ, compressor and final mixdown here; these belong in Mix.
+  - MIDI lane must remain visible by default above recreated waveform, even though the result is audio.
+
+C. MIX — AUDIO PROCESSING, MIXDOWN AND EXPORT
+  - Show audio tracks (original or reconstructed, according to track choice) and multitrack timeline.
+  - Mixer at bottom with Expanded / Compact / Hidden modes; user can resize it by dragging top edge.
+  - Channel strips: volume faders, pan, level meters, mute/solo, routing and sends.
+  - Per-track effects: parametric EQ, compressor, reverb, delay; extensible effect rack and buses.
+  - Master bus with metering and limiter option.
+  - Right inspector for selected track effects, sends and routing.
+  - Presets can be saved/loaded (e.g., worship mix preset).
+  - Export final stereo mixdown and optional individual audio stems; choose WAV/AIFF and sample rate/bit depth, optionally MP3/AAC if implemented.
+  - Export MIDI files and project data as separate optional outputs.
+  - Ensure exported stems are aligned and render from the same timeline origin.
+
+============================================================
+4. AI MODEL STRATEGY — PROPOSAL, NOT AN APPROVED BENCHMARK RESULT
+============================================================
+Use specialized local ML models, NOT a general conversational AI agent, for separation and transcription.
+
+Stem-separation candidates to benchmark:
+  - BS-RoFormer-SW / suitable six-stem RoFormer implementation, preferably accelerated on Apple Silicon via MLX where supported.
+  - HTDemucs-6s as a documented six-stem baseline/fallback.
+  - MelBand-RoFormer specialist models for optional enhancement of difficult stems.
+  - Other current commercially licensable models may be evaluated.
+
+IMPORTANT: Do not assume BS-RoFormer-SW is definitively 'best'. Verify that the chosen weights actually support all six claimed sources, run on the target Mac, and have acceptable licenses for redistribution/commercial use. Do not assume an MLX implementation or pretrained weights can be bundled without checking versions and licenses. Apple's Logic Pro Stem Splitter is proprietary and has no documented public API for direct reuse; do not attempt to depend on it.
+
+Benchmark candidates on 5–10 representative licensed worship recordings, measuring:
+  - Subjective stem clarity and bleed/artifacts.
+  - Separation quality where ground-truth multitracks exist.
+  - DOWNSTREAM drum and bass MIDI transcription accuracy (critical).
+  - Wall-clock runtime and peak memory on M2 Max.
+  - Stability, compatibility and license terms.
+
+Implement an interchangeable provider abstraction so model replacement doesn't require UI changes.
+Two optional processing modes in Analyze:
+  - Standard Separation: primary six-stem model.
+  - Enhanced Separation: optional specialist reprocessing for selected stems.
+Do not blindly combine unrelated model outputs; check phase/alignment and artifacts.
+
+Transcription candidates/approach:
+  - Spotify Basic Pitch as a baseline for melodic/bass pitch-to-MIDI, with note tracking and postprocessing.
+  - Drum-specific onset detection plus multilabel drum classification (simultaneous hits matter).
+  - Rhythm/tempo estimation via librosa or specialized beat-tracking models.
+  - Later: specialized polyphonic piano, guitar-chord/strum and articulation transcription.
+  - Treat inferred velocity, pitch bend, strumming and articulation as estimates, with editing controls.
+
+============================================================
+5. RECOMMENDED TECHNICAL ARCHITECTURE
+============================================================
+LANGUAGE DECISION (APPROVED BY USER, 2026-11-17): Two languages.
+  - Swift for the interface, playback, mixing, instrument hosting and export.
+  - Python for AI analysis only (separation, transcription, rhythm), run as a separate background process.
+  An all-Python app was considered and rejected: real-time playback, Audio Unit hosting and packaging are more reliable in Swift.
+  The specific libraries below remain engineering proposals to verify.
+
+Suggested stack (engineering proposal):
+  - UI: SwiftUI (native macOS).
+  - Playback/mixing/Audio Unit hosting: Swift + AVFAudio/AVAudioEngine; Audio Units and AVAudioUnitSampler.
+  - AI analysis: Python worker with PyTorch or MLX depending on chosen model; separate process from UI/audio callback.
+  - Persistence: SQLite for structured project state, file-based storage for audio/MIDI/cache.
+  - Project extension: .stemsstudio (package/bundle).
+  - Communication: versioned JSON job requests/results over subprocess stdin/stdout for MVP; XPC optional later.
+  - Distribution: notarized native app; validate bundled model and Python runtime licensing and packaging.
+
+Strict separation of concerns:
+  SwiftUI UI -> project/job orchestration -> separate AI analysis worker
+  SwiftUI UI -> realtime audio engine / instrument host -> playback, rendering
+  Project store -> original media, separated stems, MIDI, rendered audio, presets, cached model outputs
+
+Do NOT run heavy ML inference on the real-time audio callback or main UI thread.
+Use sample-accurate positions for source media, with a tempo map converting sample positions to beats; support variable-tempo recordings. Avoid accumulating timeline drift.
+
+Suggested services:
+  ImportService: decoding, format validation, waveform peaks, audio metadata.
+  SeparationService: model execution and aligned stem output.
+  RhythmAnalysisService: beats, tempo map, key/chords/sections.
+  DrumTranscriber: onsets, classes, velocities, confidence.
+  PitchTranscriber: note/pitch/bend extraction and corrections.
+  MIDIEditor/MIDIEngine: note editing and event scheduling.
+  InstrumentHost: bundled sampler and installed Audio Units.
+  ReconstructionService: map MIDI/articulations to virtual instruments and render audio.
+  AudioEngine: synchronized audio/MIDI playback and monitoring.
+  MixEngine: channel strips, effects, sends, master bus.
+  ExportService: aligned offline WAV/stem/MIDI rendering.
+  ProjectStore: save/reopen, undo/redo, schema migration, caches.
+
+Instrument realism:
+  - Use licensed multisampled instruments with velocity layers, round robin, articulation/key-switch mappings and room samples where possible.
+  - Bundled starter kit: redistributable acoustic drums and electric bass.
+  - Later support installed third-party AU instruments and preset recall.
+  - MIDI alone does not encode all expressive performance; provide manual editing and appropriate instrument articulations.
+
+============================================================
+6. PROJECT DATA MODEL
+============================================================
+Core entities:
+  Project: id, name, source media, sample rate, duration, version.
+  Track: id, stem type, color, gain, pan, mute, solo, routing.
+  AudioRegion: source file, sample start, source offset, duration, lane type (original/stem/recreated).
+  MIDIRegion: sample/beat start, length, instrument assignment.
+  MIDIEvent: note, start, duration, velocity, confidence, optional pitch bend/articulation.
+  TempoEvent: sample position, BPM, meter.
+  AnalysisJob: model/version, parameters, status, diagnostics, output artifacts.
+  InstrumentAssignment: plugin identifier, preset, sample library, articulation map.
+  EffectChain: ordered effects, parameters, bypass, sends.
+  ExportPreset: format, sample rate, bit depth, outputs.
+
+Suggested project layout:
+  Song.stemsstudio/
+    manifest.json
+    project.sqlite
+    Media/original.wav
+    Stems/vocals.wav, drums.wav, bass.wav, guitar.wav, piano.wav, other.wav
+    MIDI/drums.mid, bass.mid, ...
+    Analysis/tempo-map.json, drum-events.json, pitch-events.json
+    Renders/recreated-drums.wav, recreated-bass.wav, ...
+    Presets/
+    Cache/
+
+Keep source audio and analysis results non-destructive. Cache results by input hash + model version + parameters. Changing an instrument preset should NOT re-run stem separation.
+
+============================================================
+7. REPOSITORY STRUCTURE
+============================================================
+StemsStudio/
+  apps/macOS/
+    App/
+    Features/Analyze/
+    Features/Recreate/
+    Features/Mix/
+    Features/Import/
+    Features/Export/
+    Features/Library/
+  packages/
+    ProjectCore/
+    AudioEngine/
+    MIDIEngine/
+    InstrumentHost/
+    AnalysisClient/
+    ProjectPersistence/
+  workers/analysis/
+    main.py
+    separation/
+    transcription/drums.py
+    transcription/bass.py
+    transcription/polyphonic.py
+    rhythm/
+    postprocessing/
+    tests/
+  schemas/
+    job-request.schema.json
+    job-result.schema.json
+    midi-events.schema.json
+  models/manifest.json
+  test-fixtures/
+  scripts/
+  docs/
+  README.md
+
+============================================================
+8. PRACTICAL MVP AND PHASES
+============================================================
+MVP must work end-to-end on macOS:
+  1. Import song and show song overview.
+  2. Separate six stems (with fallback/error handling).
+  3. Display stems in Analyze and detect preliminary tempo/sections.
+  4. Generate editable drum MIDI (kick/snare/hat) and bass MIDI.
+  5. Show Recreate with paired MIDI notes ABOVE rendered audio waveform.
+  6. Choose realistic drum/bass instrument presets; preview, edit, render/re-render.
+  7. A/B compare original versus recreated stems.
+  8. Mix audio with volume, pan, basic EQ, compressor and master level.
+  9. Export synchronized stereo mix and individual WAV stems, plus MIDI.
+  10. Save/reopen projects without losing edits.
+
+Do NOT block MVP on accurate polyphonic guitar, piano, vocals-to-MIDI, or full automatic recreation of every instrument. For unsupported parts, keep original separated audio and show an honest transcription status. UI can display six paired groups when MIDI exists; empty/unavailable MIDI lanes must not be filled with invented notes.
+
+Proposed implementation phases (rough planning only):
+  Phase 0 (1–2 weeks): command-line feasibility test and model benchmarking.
+  Phase 1 (3–4 weeks): SwiftUI shell, shared transport, import, timeline, persistence.
+  Phase 2 (5–7 weeks): separation worker, drum/bass transcription, MIDI editor.
+  Phase 3 (8–10 weeks): sample instruments, instrument browser, rendering, A/B.
+  Phase 4 (11–14 weeks): Mix workspace, effects, exports, stabilization/private beta.
+Actual schedule depends on team size, model quality and technical issues.
+
+Engineering acceptance tests:
+  - Playback is stable while AI jobs run in a separate process.
+  - Stems and MIDI stay synchronized over entire songs, including tempo changes.
+  - Paired MIDI/audio lanes in Recreate align with shared playhead.
+  - Changes to MIDI or instrument presets invalidate only relevant rendered-audio cache.
+  - Analysis jobs can cancel and recover from crashes without corrupting project.
+  - Projects survive save/reopen and missing plugin situations gracefully.
+  - Mixdown and stem exports have matching start times and correct duration.
+  - Benchmark drum onset and bass-note transcription on labeled fixtures; expose confidence and correction workflow.
+  - Do not present estimated confidence scores as measured accuracy unless validated.
+
+============================================================
+9. UX AND INTERACTION DETAILS
+============================================================
+- Top tabs: Analyze, Recreate, Mix. Highlight active tab in purple.
+- Top-right Export button; the primary export workflow is final-stage Mix.
+- Project/Library sidebar collapsible. No duplicate tabs in sidebar.
+- Transport immediately below song/AI analysis on ALL workspaces.
+- Section markers and zoomable timeline; playhead synchronized across all lanes.
+- Analyze: only original separated audio waveforms; Generate MIDI actions and results.
+- Recreate: each stem group shows MIDI notes above recreated waveform; right instrument inspector; Preview, Replace, Re-render; Original/Recreated/Blend playback.
+- Mix: audio waveforms and mixer; channel strips and effect inspector; mixer Expanded/Compact/Hidden, resizable. Compact can be default when entering Mix.
+- Preserve user edits and instrument choices when changing tabs.
+- Color palette example: vocals blue, drums green, bass purple, guitar yellow, piano cyan, pads deep blue; purple for active controls.
+- Accessible keyboard shortcuts and clear progress/error messaging.
+- Design should be simpler and less cluttered than a full DAW, while retaining useful professional tools.
+
+============================================================
+10. LICENSE, PRIVACY AND RELIABILITY
+============================================================
+- All analysis should be local by default; no song upload to cloud required.
+- Verify licensing for AI code, pretrained weights, bundled samples, and plugins separately.
+- Songs may be copyrighted; processing/exporting/performance/distribution may require appropriate permissions. Do not assume stem separation grants rights.
+- Protect projects and source media; avoid telemetry containing audio by default.
+- Provide disk-space estimates, model download management, and processing progress.
+- Support macOS/Apple Silicon compatibility testing, code signing and notarization.
+
+============================================================
+11. INSTRUCTIONS TO CLAUDE CODE
+============================================================
+Build this as a REAL, functional macOS project, not just a static mockup. Preserve approved UI decisions exactly unless a technical constraint is identified and discussed. Implement a vertical slice first: import -> separation -> drum/bass MIDI -> virtual instrument render -> paired Recreate lanes -> basic Mix -> export.
+
+Before coding, produce:
+  (a) architecture/implementation plan,
+  (b) precise Swift and Python dependencies with license checks,
+  (c) model evaluation matrix and feasibility risks,
+  (d) milestones and test plan.
+
+Then scaffold the repo, implement project persistence and playback, and deliver working functionality incrementally. Do not fabricate AI outputs, note blocks, waveforms, processing progress, model benchmarks, or instrument audio in the production application. Use explicit demo/sample data only in an isolated preview mode.
+
+Where specifications are uncertain (for example, model licensing, macOS MLX support, real-time AU offline rendering, or guitar transcription), verify before committing to an implementation. Keep provider interfaces modular so better models can be swapped in later.
+
+============================================================
+12. APPROVED RENDERINGS (USER-APPROVED 2026-11-17)
+============================================================
+The user approved three renderings. They are the layouts to follow. Store them in the repo at docs/renderings/:
+  - StemsStudio-analyze.png
+  - StemsStudio-recreate.png
+  - StemsStudio-mix.png
+
+Match the renderings as closely as possible: layout, proportions, colors, spacing, control placement and labels. If any built screen does not look like its rendering, redesign and rebuild it to match. If a technical constraint prevents a match, stop and discuss it with the user before deviating.
+
+The song title, waveforms, MIDI notes, meter levels, note counts, preset names and parameter values shown in the renderings are SAMPLE DATA for layout only. Do not hard-code or reproduce them in the production app (see section 11).
+
+Shared by all three renderings:
+  - Title bar: window controls, sidebar toggle, app name at left; Analyze / Recreate / Mix segmented tabs centered, active tab purple; purple Export button at top right.
+  - Left sidebar: Project (Overview, Project Files) and Library (Instruments, Presets, User Sounds, Samples).
+  - Song header: cover art placeholder, title, original recording information; Tempo, Key and Time tiles; AI analysis status chips at right.
+  - Transport directly below the header, same position on every tab: play, stop, record, time position with bar number, original-song overview waveform, zoom controls.
+  - Timeline: section markers (colored blocks) above bar numbers, track headers at left with a stem-colored edge, shared white playhead across all lanes.
+  - Right inspector, contextual to the tab and selected stem.
+  - Stem colors: vocals blue, drums green, bass purple, guitar yellow, piano cyan, other/pads deep blue.
+
+Analyze rendering:
+  - Six lanes of separated audio waveforms, one per stem. No MIDI lanes, no mixer.
+  - Each track header: name, mute/solo, MIDI status line, and a Review button (MIDI exists) or purple Generate MIDI button (not yet generated). Vocals shows that it stays as audio.
+  - Inspector: Separation (Standard / Enhanced mode, model, status); Song analysis with an edit link per value (tempo, key, time signature, beat grid, sections, chords); Transcription for the selected stem (status, notes found, uncertain count, estimated confidence with a note that it is an estimate, not measured accuracy); Review notes, Regenerate, and Generate MIDI for all stems.
+
+Recreate rendering:
+  - Each stem is an expandable group with two aligned lanes: MIDI on top, recreated audio waveform below. No mixer.
+  - Track header: disclosure triangle, name, mute/solo, Orig / Recreated / Blend switch, instrument preset and render status.
+  - Uncertain notes are drawn as amber outlines instead of filled blocks.
+  - A stem without MIDI shows an empty MIDI lane with a plain message, and its original stem waveform (dimmed) below. Never draw invented notes.
+  - Collapsed groups show as a single thin row with a status line.
+  - Inspector for the selected stem: sample library, preset list, performance controls (velocity scale, timing humanize, room mics, articulation map), audition (Original / Recreated / Blend plus blend slider), Preview / Replace / Re-render, and Open piano roll.
+
+Mix rendering:
+  - Compact audio-only track lanes; each header has mute/solo and an Original / Recreated source selector.
+  - Mixer at the bottom with an Expanded / Compact / Hidden switch, a drag handle on its top edge, and an Export mixdown button.
+  - Channel strips: effect slots, pan, fader with stereo meters, dB readout, mute/solo, stem-colored name. One strip per stem, then Reverb and Delay buses, then Master with limiter.
+  - Inspector for the selected track: parametric EQ curve, compressor, sends, routing, mix preset with save and load.
+
+END OF SPECIFICATION
