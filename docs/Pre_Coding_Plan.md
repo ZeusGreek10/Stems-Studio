@@ -10,14 +10,12 @@ Date: 2026-11-18 | Covers spec v1.3, section 11 deliverables (a) to (d) | Build 
 
 ---
 
-## 0. Decisions needed from the user before Phase 0
+## 0. User decisions (answered 2026-11-23)
 
-These change what gets built, so they come first.
-
-1. **Own use, or share/sell?** No six-stem separation model has clean commercial terms (section C). For private use on your own Mac the risk is low. If the app will be given or sold to others, the separation model must be downloaded by each user under its own terms, or a commercially licensed model must be found. *Recommended assumption: own use first, models never bundled inside the app.*
-2. **Apple Developer account?** Signing and notarizing needs a paid Apple Developer ID. Without it the app still runs on your Mac, but macOS shows an "unidentified developer" warning on first open. *Recommended: skip until the app is shared.*
-3. **Test songs.** Phase 0 needs 5 to 10 worship recordings you have the right to process, ideally 1 or 2 with original multitracks for ground truth.
-4. **Minimum macOS.** *Proposed: macOS 14 on Apple Silicon only.* (MLX's minimum version is to confirm.)
+1. **Own use only.** The app is for the user's own use, not for sharing or sale. Separation models are still never bundled inside the app: they are downloaded on the user's Mac with their licence shown. If the app is ever shared or sold, the model licences in section C must be revisited first.
+2. **No Apple Developer account.** The app is not signed with a Developer ID or notarized. macOS will show an "unidentified developer" warning on first open, which the user approves once. Risk 6 (signing a bundled Python runtime) is deferred.
+3. **Test songs: to be supplied later.** Phase 0 benchmarking is blocked until the user provides 5 to 10 worship recordings they have the right to process, ideally 1 or 2 with original multitracks.
+4. **macOS 14 or later, Apple Silicon only.** No Intel build. (MLX's own minimum version is still to confirm against this.)
 
 ---
 
