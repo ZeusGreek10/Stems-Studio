@@ -8,6 +8,10 @@ Native macOS app (Apple Silicon first) that separates a song into stems, transcr
 - `docs/Pre_Coding_Plan.md` is the pre-coding plan (architecture, dependencies and licences, model matrix, milestones, tests). Its "to confirm" and "to measure" items are still open.
 - `docs/renderings/` holds the user-approved screens: `StemsStudio-analyze.png`, `StemsStudio-recreate.png`, `StemsStudio-mix.png`.
 
+## Who this is for
+
+The owner runs sound, screens and lights at a church and is not a programmer (no Xcode, Python or Terminal skills). Explain what you did in plain language: what changed and how to try it. No code walkthroughs unless asked.
+
 ## Rules
 
 - **Build status: not started.** Do not begin building until the user says to.
@@ -18,3 +22,5 @@ Native macOS app (Apple Silicon first) that separates a song into stems, transcr
 - All analysis runs locally on the Mac. No song upload.
 - Verify licences for models, weights, sample libraries and plugins before bundling. Do not use Apple's Logic Pro instruments or samples.
 - Workflow: build the requested functions, test them, then ask the user what to do next. Do not build DMGs or releases unless the user asks.
+- Work on a branch and push the branch. Do not push to `main` or tag a release unless the user says to.
+- Say plainly what you could not verify.
